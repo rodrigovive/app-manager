@@ -2,7 +2,8 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { SECRET_JWT } = require("../config/dev");
+const SECRET_JWT = process.env.SECRET_JWT || 'public';
+
 const Task = require("./Task");
 const userSchema = mongoose.Schema(
   {
@@ -96,7 +97,6 @@ userSchema.statics.findByCredentials = async ({
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
-  console.log(isMatch);
 
   if (!isMatch) {
     throw new Error("Unable to login");
