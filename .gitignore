@@ -1,5 +1,6 @@
 # File created using '.gitignore Generator' for Visual Studio Code: https://bit.ly/vscode-gig
-/src/config/dev.env
+./src/config/dev.env
+./playground
 # Created by https://www.gitignore.io/api/visualstudiocode,windows,jetbrains,macos,node
 # Edit at https://www.gitignore.io/?templates=visualstudiocode,windows,jetbrains,macos,node
 
