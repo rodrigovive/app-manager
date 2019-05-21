@@ -1,7 +1,9 @@
 const User = require("../models/User");
 const express = require("express");
+const multer = require("multer");
 const router = new express.Router();
 const auth = require("../middleware/auth");
+const sharp = require("sharp");
 router.post("/users", async (req, res) => {
   const { body = {} } = req;
   const user = new User(body);
@@ -60,11 +62,8 @@ router.get("/users/me", auth, (req, res) => {
   }
 });
 
-router.patch("/users/me", auth ,async (req, res) => {
-  const {
-    user,
-    body
-  } = req;
+router.patch("/users/me", auth, async (req, res) => {
+  const { user, body } = req;
   const updates = Object.keys(body);
   const allowedUpdates = ["name", "email", "password", "age"];
   const isValidOperation = updates.every(update =>
@@ -92,4 +91,68 @@ router.delete("/users/me", auth, async (req, res) => {
   }
 });
 
+const upload = multer({
+  limits: {
+    fileSize: 1000000
+  },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      return cb(
+        new Error("Please upload an image with format jpg, jpeg or png.")
+      );
+    }
+    cb(undefined, true);
+  }
+});
+
+router.post(
+  "/users/me/avatar",
+  auth,
+  upload.single("avatar"),
+  async (req, res) => {
+    const buffer = await sharp(req.file.buffer)
+      .resize({
+        width: 250,
+        height: 250
+      })
+      .png()
+      .toBuffer();
+
+    req.user.avatar = buffer;
+    await req.user.save();
+    res.send();
+  },
+  (err, req, res, next) => {
+    res.status(400).send({ error: err.message });
+  }
+);
+
+router.delete("/users/me/avatar", auth, async (req, res) => {
+  const { user } = req;
+  try {
+    user.avatar = undefined;
+    await user.save();
+    res.status(200).send();
+  } catch (e) {
+    res.status(400).send(e.toString());
+  }
+});
+
+router.get("/users/:id/avatar", async (req, res) => {
+  const {
+    params: { id }
+  } = req;
+  try {
+    const user = await User.findById(id);
+    if (!user || !user.avatar) {
+      throw new Error("Error user avatar not found");
+    }
+    res.set("Content-Type", "image/jpg");
+    res.send(user.avatar);
+  } catch (e) {
+    res.status(404).send({
+      error: e.toString()
+    });
+  }
+});
 module.exports = router;
