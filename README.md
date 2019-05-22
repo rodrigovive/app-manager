@@ -41,3 +41,9 @@ Start the app:
 ```sh
 $ npm start
 ```
+
+Test the app:
+
+```sh
+$ npm test
+```
